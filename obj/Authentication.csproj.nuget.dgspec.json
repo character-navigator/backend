@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\AxelLokrantz\\OneDrive - BookBeat\\Desktop\\Authentication\\Authentication.csproj": {}
+    "C:\\Users\\DanielDahlberg\\OneDrive - BookBeat\\Desktop\\Project\\backend\\Authentication.csproj": {}
   },
   "projects": {
-    "C:\\Users\\AxelLokrantz\\OneDrive - BookBeat\\Desktop\\Authentication\\Authentication.csproj": {
+    "C:\\Users\\DanielDahlberg\\OneDrive - BookBeat\\Desktop\\Project\\backend\\Authentication.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\AxelLokrantz\\OneDrive - BookBeat\\Desktop\\Authentication\\Authentication.csproj",
+        "projectUniqueName": "C:\\Users\\DanielDahlberg\\OneDrive - BookBeat\\Desktop\\Project\\backend\\Authentication.csproj",
         "projectName": "Authentication",
-        "projectPath": "C:\\Users\\AxelLokrantz\\OneDrive - BookBeat\\Desktop\\Authentication\\Authentication.csproj",
-        "packagesPath": "C:\\Users\\AxelLokrantz\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\AxelLokrantz\\OneDrive - BookBeat\\Desktop\\Authentication\\obj\\",
+        "projectPath": "C:\\Users\\DanielDahlberg\\OneDrive - BookBeat\\Desktop\\Project\\backend\\Authentication.csproj",
+        "packagesPath": "C:\\Users\\DanielDahlberg\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\DanielDahlberg\\OneDrive - BookBeat\\Desktop\\Project\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\AxelLokrantz\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\DanielDahlberg\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [

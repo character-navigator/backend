@@ -57,38 +57,44 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet(
-    "/api/download-epub",
-    async (HttpContext http) =>
+    "/api/download-epub/{bookName}",
+    async (HttpContext context) =>
     {
-        // Set the path to the EPUB file
-        var epubFilePath = Path.Combine(
-            app.Environment.ContentRootPath,
-            "Data",
-            "animal-farm_modified.epub"
-        );
-        // Check if file exists
-        if (!File.Exists(epubFilePath))
+        if(context.Request.RouteValues.TryGetValue("bookName", out var bookNameWrapper))
         {
-            http.Response.StatusCode = 404;
-            await http.Response.WriteAsync("File not found");
-            return;
+            var bookName = bookNameWrapper.ToString();
+
+            // Set the path to the EPUB file
+            var epubFilePath = Path.Combine(
+                app.Environment.ContentRootPath,
+                "Data",
+                bookName,
+                bookName + "_modified.epub"
+            );
+            // Check if file exists
+            if (!File.Exists(epubFilePath))
+            {
+                context.Response.StatusCode = 404;
+                await context.Response.WriteAsync("File not found");
+                return;
+            }
+            // Read the file into a stream
+            var fileStream = new FileStream(
+                epubFilePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read
+            );
+            // Set the content type for the response
+            context.Response.ContentType = "application/epub+zip";
+            // Set the file download name
+            context.Response.Headers.Add(
+                "Content-Disposition",
+                "attachment; filename=Animal_Farm_v2.epub"
+            );
+            // Send the stream to the response
+            await fileStream.CopyToAsync(context.Response.Body);
         }
-        // Read the file into a stream
-        var fileStream = new FileStream(
-            epubFilePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read
-        );
-        // Set the content type for the response
-        http.Response.ContentType = "application/epub+zip";
-        // Set the file download name
-        http.Response.Headers.Add(
-            "Content-Disposition",
-            "attachment; filename=Animal_Farm_v2.epub"
-        );
-        // Send the stream to the response
-        await fileStream.CopyToAsync(http.Response.Body);
     }
 );
 
@@ -103,15 +109,18 @@ CsvParser<Sentence> csvSentenceParser = new CsvParser<Sentence>(
 );
 
 app.MapGet(
-    "/api/sentences",
+    "/api/sentences/{bookName}",
     async (HttpContext context) =>
     {
         var token = context.Request.Cookies["token"];
         var validToken = ValidateToken(token);
 
-        if (validToken)
+        if (validToken &&
+            context.Request.RouteValues.TryGetValue("bookName", out var bookNameWrapper)
+        )
         {
-            var csvFilePath = Path.Combine("Data", "animal-farm", "sentences_df_animal_farm.csv");
+            var bookName = bookNameWrapper.ToString();
+            var csvFilePath = Path.Combine("Data", bookName, bookName + "_sentences.csv");
             var result = csvSentenceParser.ReadFromFile(csvFilePath, Encoding.UTF8);
             var sentences = result.ToList().Where(r => r.IsValid).Select(r => r.Result).ToList();
 
@@ -154,18 +163,20 @@ app.MapGet(
 
                 var csvCharacterResults = csvCharacterParser
                     .ReadFromFile(
-                        $"Data/{bookName}/merged_summaries_animal_farm.csv",
+                        $"Data/{bookName}/merged_summaries.csv",
                         Encoding.ASCII
                     )
                     .ToList();
 
                 var csvSentencesResults = csvSentenceParser
-                    .ReadFromFile($"Data/{bookName}/sentences_df_animal_farm.csv", Encoding.ASCII)
+                    .ReadFromFile($"Data/{bookName}/{bookName}_sentences.csv", Encoding.ASCII)
                     .ToList();
 
                 var allCharacterSummaries = csvCharacterResults.Where(x =>
                     x.IsValid && x.Result.Name.Equals(character)
                 );
+
+                // await context.Response.WriteAsJsonAsync(csvCharacterResults);
 
                 var totalCharacterSummariesResult = allCharacterSummaries.Count(x => x.IsValid);
 
@@ -175,7 +186,7 @@ app.MapGet(
                     .Where(x => x.IsValid && x.Result.EndSid < currentSid)
                     .Count();
 
-                var totalSidResult = csvSentencesResults.Count(x => x.IsValid);
+                var totalSidResult = csvSentencesResults.Count(x => x.IsValid);;
 
                 await context.Response.WriteAsJsonAsync(
                     new
@@ -186,6 +197,7 @@ app.MapGet(
                         TotalCharacterSummaries = totalCharacterSummariesResult,
                     }
                 );
+
             }
         }
     }
@@ -195,6 +207,7 @@ app.MapGet(
     "/api/{bookName}/{character}/{sid}",
     async context =>
     {
+        Console.WriteLine("is this working?");
         var token = context.Request.Cookies["token"];
         var validToken = ValidateToken(token);
 
@@ -222,7 +235,7 @@ app.MapGet(
 
                 var csvResults = csvCharacterParser
                     .ReadFromFile(
-                        $"Data/{bookName}/merged_summaries_animal_farm.csv",
+                        $"Data/{bookName}/merged_summaries.csv",
                         Encoding.ASCII
                     )
                     .ToList();

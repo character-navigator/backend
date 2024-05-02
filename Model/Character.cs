@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 public class Character
 {
-    public int EndSid { get; set; }
+    public float EndSid { get; set; }
     public string Name { get; set; }
     public string Summary { get; set; }
 }

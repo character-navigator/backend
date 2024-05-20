@@ -186,7 +186,7 @@ app.MapGet(
                     .Where(x => x.IsValid && x.Result.EndSid < currentSid)
                     .Count();
 
-                var totalSidResult = csvSentencesResults.Count(x => x.IsValid);;
+                var totalSidResult = csvSentencesResults.Count(x => x.IsValid);
 
                 await context.Response.WriteAsJsonAsync(
                     new
@@ -204,24 +204,16 @@ app.MapGet(
 );
 
 app.MapGet(
-    "/api/{bookName}/{character}/{sid}",
-    async context =>
+    "/api/get-summaries/{bookName}/{character}/{sid}",
+    async context => 
     {
-        Console.WriteLine("is this working?");
-        var token = context.Request.Cookies["token"];
-        var validToken = ValidateToken(token);
+        // var token = context.Request.Cookies["token"];
+        // var validToken = ValidateToken(token);
 
-        if (validToken)
-        {
-            CsvCharacterMapping csvMapper = new CsvCharacterMapping();
-            CsvParser<Character> csvCharacterParser = new CsvParser<Character>(
-                csvParserOptions,
-                csvMapper
-            );
-
+        // if (validToken)
+        // {
             var routeValues = context.Request.RouteValues;
-
-            // var result = new List<CsvMappingResult<Character>>();
+            routeValues.TryGetValue("bookName", out var test);
 
             if (
                 routeValues.TryGetValue("bookName", out var bookNameWrapper)
@@ -229,6 +221,7 @@ app.MapGet(
                 && routeValues.TryGetValue("sid", out var sidWrapper)
             )
             {
+                
                 var bookName = bookNameWrapper.ToString();
                 var character = characterWrapper.ToString();
                 int.TryParse(sidWrapper.ToString(), out var sid);
@@ -240,17 +233,19 @@ app.MapGet(
                     )
                     .ToList();
 
-                Character result = csvResults
+                List<Character> result = csvResults
+                    // .Where(x =>
+                    //     x.IsValid && x.Result.Name.Equals(character) && x.Result.EndSid < sid
+                    // )
                     .Where(x =>
-                        x.IsValid && x.Result.Name.Equals(character) && x.Result.EndSid < sid
+                        x.IsValid && x.Result.Name.Equals(character)
                     )
                     .Select(x => x.Result)
-                    .OrderByDescending(x => x.EndSid)
-                    .FirstOrDefault();
-
+                    .ToList();
+                
                 await context.Response.WriteAsJsonAsync(result);
             }
-        }
+        // }
     }
 );
 
@@ -289,7 +284,7 @@ app.MapPost(
 
                 var cookieOptions = new CookieOptions
                 {
-                    Expires = DateTimeOffset.UtcNow.AddMinutes(5),
+                    Expires = DateTimeOffset.UtcNow.AddHours(1),
                     IsEssential = true,
                     HttpOnly = false,
                     Secure = false,

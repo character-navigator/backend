@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder
-                .WithOrigins("http://localhost:3000", "http://localhost:3005")
+                .WithOrigins("http://localhost:3000", "http://localhost:5025")
                 .AllowAnyMethod()
                 .AllowCredentials()
                 .AllowAnyHeader();
@@ -41,21 +41,24 @@ builder
 
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
 app.UseCors(corsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseEndpoints(endpoints => 
+{
+    endpoints.MapFallbackToFile("index.html");
+});
 
+/// <summary>
+/// Downloads the specified book.
+/// </summary>
+/// <param name="bookName">The title of the book.</param>
 app.MapGet(
     "/api/download-epub/{bookName}",
     async (HttpContext context) =>
@@ -108,6 +111,10 @@ CsvParser<Sentence> csvSentenceParser = new CsvParser<Sentence>(
     new SentenceMapping()
 );
 
+/// <summary>
+/// Gets all sentences within the specified book.
+/// </summary>
+/// <param name="bookName">The title of the book.</param>
 app.MapGet(
     "/api/sentences/{bookName}",
     async (HttpContext context) =>
@@ -140,6 +147,16 @@ app.MapGet(
     }
 );
 
+/// <summary>
+/// Gets information about:
+/// 1. The sentence ID of the first occurrence of the specified character.
+/// 2. The total sentence count of the specified book.
+/// 3. The number of summaries for the specified character unlocked by the user.
+/// 4. The total number of summaries for the specified character.
+/// </summary>
+/// <param name="bookName">The title of the book.</param>
+/// <param name="character">The name of the character.</param>
+/// <param name="bookName">The sentence ID of the page currently viewed by the user.</param>
 app.MapGet(
     "/api/progress-info/{bookName}/{character}/{currentSid}",
     async context =>
@@ -203,15 +220,21 @@ app.MapGet(
     }
 );
 
+/// <summary>
+/// Gets all summaries for the specified character.
+/// </summary>
+/// <param name="bookName">The title of the book.</param>
+/// <param name="character">The name of the character.</param>
+/// <param name="sid">The sentence ID of the page currently viewed by the user. Was previously used to restrict the number of retrieved summaries, but this code is commented out.</param>
 app.MapGet(
     "/api/get-summaries/{bookName}/{character}/{sid}",
     async context => 
     {
-        // var token = context.Request.Cookies["token"];
-        // var validToken = ValidateToken(token);
+        var token = context.Request.Cookies["token"];
+        var validToken = ValidateToken(token);
 
-        // if (validToken)
-        // {
+        if (validToken)
+        {
             var routeValues = context.Request.RouteValues;
             routeValues.TryGetValue("bookName", out var test);
 
@@ -245,10 +268,14 @@ app.MapGet(
                 
                 await context.Response.WriteAsJsonAsync(result);
             }
-        // }
+        }
     }
 );
 
+/// <summary>
+/// Authenticates user.
+/// </summary>
+/// <param name="inputUser">Contains the user's username and password</param>
 app.MapPost(
         "/api/authenticate",
         async (User inputUser, HttpContext context) =>
